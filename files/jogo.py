@@ -50,15 +50,13 @@ mapakangoo = {
 
 mapabat = {
     'palco': ['lounge', 'manutencao'],
-    'lounge': ['som', 'cozinha', 'arcade'],
-    'som':['lounge'],
+    'lounge': ['cozinha'],
     'manutencao': ['lounge'],
     'cozinha': ['armazem', 'portab'],
     'armazem': ['gerador', 'cozinha'],
     'gerador':['armazem'],
-    'arcade':['portaa'],
-    'portaa': ['escritorio'],
-    'portab': ['escritorio']
+    'portab': ['escritorio'],
+    'escritorio': []
 }
 
 
@@ -68,7 +66,7 @@ images_dir = os.path.join( "..", "imagens" )
 clock = pygame.time.Clock()
 
 class Animatronic(pygame.sprite.Sprite):
-    def __init__(self, dif, stage, pos, mapa, state = 0):
+    def __init__(self, dif, stage, pos, mapa, delay, state = 0):
         pygame.sprite.Sprite.__init__( self )
         self.pos = pos
         self.dif = dif
@@ -76,32 +74,45 @@ class Animatronic(pygame.sprite.Sprite):
         self.moved = 0
         self.state = state
         self.cont = 0
-        self.update(0, 0)
         self.mapa = mapa
-        pass
+        self.inicial = pos
+        self.delay = delay
+        self.update(0, 0, 0)
 
 
-    def update(self, tempo, porta):
-        if tempo - self.moved >= 3000:
-            self.pos = Rand.choice(self.mapa[self.pos])
-            print(self.pos)
-            
-        if (tempo - self.cont) >= 2000:
-            self.cont = tempo
-            num = Rand.randrange(1, 20)
-            if num <= self.dif:
-                self.pos = Rand.choice(self.mapa[self.pos])
-                print("pos: ", self.pos)
-                self.moved = tempo
-                print(self.moved)
+    def update(self, tempo, portaa, portab):
+        global perda
+        if tempo >= self.delay and perda == 0:
+            if self.pos == 'portaa' and (tempo - self.moved) >= 3000 :
+                if portaa == 0:
+                    perda = 1
+                    print(self.pos)
+                    print('perdeu')
+                else:
+                    self.pos = self.inicial
+                    self.moved = tempo
+                    print('reset')
 
-        if self.pos == 'escritorio':
-            global perda
-            if porta == 0:
-                perda += 1
-            else:
-                self.pos = 'palco'
-                self.state = 0
+            elif self.pos == 'portab' and (tempo - self.moved) >= 3000:
+                if portab == 0:
+                    perda = 1
+                    print(self.pos)
+                    print('perdeu')
+                else:
+                    self.pos = self.inicial
+                    self.moved = tempo
+                    print('reset')
+
+            elif (tempo - self.moved) >= 3000 and (tempo - self.cont) >= 2000:
+                self.cont = tempo
+                num = Rand.randrange(1, 20)
+                if num <= self.dif:
+                    self.pos = Rand.choice(self.mapa[self.pos])
+                    print("pos: ", self.pos)
+                    self.moved = tempo
+                    print(self.moved)
+
+        
               
         
 class Porta(pygame.sprite.Sprite):
@@ -119,7 +130,7 @@ class Porta(pygame.sprite.Sprite):
             pygame.draw.rect(tela, (255, 0, 0), (self.x, self.y, self.w, self.h))
 
 
-morcego = Animatronic(5, 0, 'palco', mapabat)
+morcego = Animatronic(5, 0, 'palco', mapabat, 2000)
 portaa = Porta(235, 365, 10, 20)
 portab = Porta(270, 340, 20, 10)
 
@@ -141,9 +152,10 @@ while True:
     
 
     tempo = pygame.time.get_ticks()
-    morcego.update(tempo, portaa.state)
     portaa.doorcontrol()
     portab.doorcontrol()
+    morcego.update(tempo, portaa.state, portab.state)
+    
 
 
     pygame.display.update()
