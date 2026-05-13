@@ -139,26 +139,45 @@ class Porta(pygame.sprite.Sprite):
             pygame.draw.rect(tela, (255, 0, 0), (self.x, self.y, self.w, self.h))
 
 
-
 morcego = Animatronic(5, 0, 'palco', mapabat, 2000)
+dino = Animatronic(5, 0, 'palco', mapadino, 2000)
 portaa = Porta(235, 365, 10, 20)
 portab = Porta(270, 340, 20, 10)
+cameras = {
+    'manutencao': pygame.Rect(85, 0, 120, 50),
+    'palco': pygame.Rect(135, 60, 50, 20),
+    'som': pygame.Rect(25, 60, 50, 50),
+    'lounge': pygame.Rect(85, 90, 150, 120),
+    'arcade': pygame.Rect(0, 180, 75, 150),
+    'cozinha': pygame.Rect(85, 220, 70, 50),
+    'armazem': pygame.Rect(165, 220, 70, 50),
+    'gerador': pygame.Rect(165, 280, 70, 50)
+}
+cam = 'palco'
 
 while True:
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
             exit()
+        
+        if event.type == MOUSEBUTTONDOWN:
+            mouse_pos = event.pos
+            for nome_cam, retangulo in cameras.items():
+                if retangulo.collidepoint(mouse_pos):
+                    cam = nome_cam
+                    print('muda de camera')
 
     tela.fill((0,0,0))
+
+    for nome_cam, retangulo in cameras.items():
+        # Desenha o botão: cor clara se selecionada, escura se não
+        cor = (150, 200, 120) if cam == nome_cam else (60, 60, 60)
+        pygame.draw.rect(tela, cor, retangulo)
+        # Borda para destacar o botão
+        pygame.draw.rect(tela, (255, 255, 255), retangulo, 2)
+
     # desenho base do mapa na tela
-    pygame.draw.rect(tela, (100, 100, 100), (85, 0, 120, 50))
-    pygame.draw.rect(tela, (100, 100, 100), (25, 60, 50, 50))
-    pygame.draw.rect(tela, (100, 100, 100), (85, 60, 150, 150))
-    pygame.draw.rect(tela, (100, 100, 100), (0, 180, 75, 150))
-    pygame.draw.rect(tela, (100, 100, 100), (85, 220, 70, 50))
-    pygame.draw.rect(tela, (100, 100, 100), (165, 220, 70, 50))
-    pygame.draw.rect(tela, (100, 100, 100), (165, 280, 70, 50))
     pygame.draw.rect(tela, (200, 200, 200), (85, 280, 70, 50))
     
 
@@ -166,7 +185,12 @@ while True:
     portaa.doorcontrol()
     portab.doorcontrol()
     morcego.update(tempo, portaa.state, portab.state)
-    
+
+    if dino.pos == cam:
+        pygame.draw.rect(tela, (255, 255, 0), (600, 350, 20, 20))
+
+    if morcego.pos == cam:
+        pygame.draw.rect(tela, (255, 0, 255), (630, 350, 20, 20))
 
 
     pygame.display.update()
