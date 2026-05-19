@@ -15,6 +15,7 @@ h = 720
 perda = False
 energia = True
 som = True
+office = True
 
 mapadino = {
     'palco': ['lounge', 'manutencao'],
@@ -68,7 +69,14 @@ mapabat = {
 
 tela = pygame.display.set_mode((w, h))
 pygame.display.set_caption('Demonic nightmare')
-images_dir = os.path.join( "..", "imagens" )
+images_dir = os.path.join( "..", "images" )
+# 1. Carrega a imagem original (1920x1080)
+caminho_imagem = os.path.join(images_dir, "office.png")
+imagem_original = pygame.image.load(caminho_imagem).convert()
+
+# 2. Redimensiona para o tamanho da sua tela (1280x720)
+# Você pode usar as variáveis 'w' e 'h' que já definiu no topo do script
+imagem_fundo = pygame.transform.scale(imagem_original, (w, h))
 clock = pygame.time.Clock()
 
 class Animatronic(pygame.sprite.Sprite):
@@ -207,15 +215,23 @@ while True:
                 if retangulo.collidepoint(mouse_pos):
                     cam = nome_cam
 
-    for nome_cam, retangulo in cameras.items():
-        # Desenha o botão: cor clara se selecionada, escura se não
-        cor = (150, 200, 120) if cam == nome_cam else (60, 60, 60)
-        pygame.draw.rect(tela, cor, retangulo)
-        # Borda para destacar o botão
-        pygame.draw.rect(tela, (255, 255, 255), retangulo, 2)
+    if office != True:
+        for nome_cam, retangulo in cameras.items():
+            # Desenha o botão: cor clara se selecionada, escura se não
+            cor = (150, 200, 120) if cam == nome_cam else (60, 60, 60)
+            pygame.draw.rect(tela, cor, retangulo)
+            # Borda para destacar o botão
+            pygame.draw.rect(tela, (255, 255, 255), retangulo, 2)
 
-    # desenho base do mapa na tela
-    pygame.draw.rect(tela, (200, 200, 200), (85+900, 280+300, 70, 50))
+        # desenho base do mapa na tela
+        pygame.draw.rect(tela, (200, 200, 200), (85+900, 280+300, 70, 50))
+        if dino.pos == cam and energia == True:
+            pygame.draw.rect(tela, (255, 255, 0), (600, 350, 20, 20))
+
+        if morcego.pos == cam and energia == True:
+            pygame.draw.rect(tela, (255, 0, 255), (630, 350, 20, 20))
+    else:
+        tela.blit(imagem_fundo, (0, 0))
     
 
     tempo = pygame.time.get_ticks()
@@ -223,11 +239,7 @@ while True:
     portab.doorcontrol()
     morcego.update(tempo, portaa.state, portab.state)
 
-    if dino.pos == cam and energia == True:
-        pygame.draw.rect(tela, (255, 255, 0), (600, 350, 20, 20))
-
-    if morcego.pos == cam and energia == True:
-        pygame.draw.rect(tela, (255, 0, 255), (630, 350, 20, 20))
+    
 
 
     pygame.display.update()
