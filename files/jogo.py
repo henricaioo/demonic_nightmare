@@ -69,7 +69,9 @@ mapabat = {
 
 tela = pygame.display.set_mode((w, h))
 pygame.display.set_caption('Demonic nightmare')
-images_dir = os.path.join( "..", "images" )
+dirfile = os.path.dirname(os.path.abspath(__file__))
+pasta_raiz = os.path.dirname(dirfile)
+images_dir = os.path.join( pasta_raiz, "images" )
 # 1. Carrega a imagem original (1920x1080)
 caminho_imagem = os.path.join(images_dir, "office.png")
 imagem_original = pygame.image.load(caminho_imagem).convert()
@@ -77,6 +79,7 @@ imagem_original = pygame.image.load(caminho_imagem).convert()
 # 2. Redimensiona para o tamanho da sua tela (1280x720)
 # Você pode usar as variáveis 'w' e 'h' que já definiu no topo do script
 imagem_fundo = pygame.transform.scale(imagem_original, (w, h))
+
 clock = pygame.time.Clock()
 
 class Animatronic(pygame.sprite.Sprite):
@@ -119,9 +122,10 @@ class Animatronic(pygame.sprite.Sprite):
                 num = Rand.randrange(1, 20)
                 # se o numero gerado for menor ou igual a dificuldade do personagem, ele se move
                 if num <= self.dif:
-                    self.pos = Rand.choices(itens, pesos)
-                    print("pos: ", self.pos)
+                    decidido = Rand.choices(itens, pesos)                    
                     self.moved = tempo
+                    self.pos = decidido[0]
+                    print("pos: ", self.pos)
                     print(self.moved)
 
             if self.pos == 'cozinha' and 'gerador' in self.mapa and (tempo - self.moved) >= 5000:
@@ -131,10 +135,10 @@ class Animatronic(pygame.sprite.Sprite):
                 num = Rand.randrange(1, 20)
                 # se o numero gerado for menor ou igual a dificuldade do personagem, ele se move
                 if num <= self.dif:
-                    decidido = Rand.choices(itens, pesos)
+                    decidido = Rand.choices(itens, pesos)                    
+                    self.moved = tempo
                     self.pos = decidido[0]
                     print("pos: ", self.pos)
-                    self.moved = tempo
                     print(self.moved)
 
             if self.pos == 'portaa' and (tempo - self.moved) >= 5000 :
@@ -148,15 +152,17 @@ class Animatronic(pygame.sprite.Sprite):
                     self.moved = tempo
                     print('reset')
 
-            elif self.pos == 'portab' and (tempo - self.moved) >= 5000:
-                if portab == 0:
-                    perda = 1
-                    print(self.pos)
-                    print('perdeu')
-                else:
-                    self.pos = self.inicial
-                    self.moved = tempo
-                    print('reset')
+            elif self.pos == 'portab':
+                print("portab")
+                if (tempo - self.moved) >= 5000:
+                    if portab == 0:
+                        perda = 1
+                        print(self.pos)
+                        print('perdeu')
+                    else:
+                        self.pos = self.inicial
+                        self.moved = tempo
+                        print('reset')
 
             # Caso não esteja na porta, dá um intervalo de 5 segundo e gera um número aleatorio
             elif (tempo - self.moved) >= 5000 and (tempo - self.cont) >= 5000:
@@ -164,9 +170,9 @@ class Animatronic(pygame.sprite.Sprite):
                 num = Rand.randrange(1, 20)
                 # se o numero gerado for menor ou igual a dificuldade do personagem, ele se move
                 if num <= self.dif:
+                    self.moved = tempo
                     self.pos = Rand.choice(self.mapa[self.pos])
                     print("pos: ", self.pos)
-                    self.moved = tempo
                     print(self.moved)
 
               
@@ -188,8 +194,7 @@ class Porta(pygame.sprite.Sprite):
 
 morcego = Animatronic(5, 0, 'palco', mapabat, 2000)
 dino = Animatronic(5, 0, 'palco', mapadino, 2000)
-portaa = Porta(235, 365, 10, 20)
-portab = Porta(270, 340, 20, 10)
+#portab = Porta()
 cameras = {
     'manutencao': pygame.Rect(85+900, 0+300, 120, 50),
     'palco': pygame.Rect(135+900, 60+300, 50, 20),
@@ -201,6 +206,11 @@ cameras = {
     'gerador': pygame.Rect(165+900, 280+300, 70, 50)
 }
 cam = 'palco'
+
+portaa = 0
+portab = 0
+hover = False
+
 
 while True:
     tela.fill((0,0,0))
@@ -215,6 +225,8 @@ while True:
                 if retangulo.collidepoint(mouse_pos):
                     cam = nome_cam
 
+    
+
     if office != True:
         for nome_cam, retangulo in cameras.items():
             # Desenha o botão: cor clara se selecionada, escura se não
@@ -225,6 +237,11 @@ while True:
 
         # desenho base do mapa na tela
         pygame.draw.rect(tela, (200, 200, 200), (85+900, 280+300, 70, 50))
+
+        pygame.draw.rect(tela, (200, 200, 200), (75+900, 295+300, 10, 20))
+        pygame.draw.rect(tela, (200, 200, 200), (110+900, 270+300, 20, 10))
+        
+        
         if dino.pos == cam and energia == True:
             pygame.draw.rect(tela, (255, 255, 0), (600, 350, 20, 20))
 
@@ -232,12 +249,46 @@ while True:
             pygame.draw.rect(tela, (255, 0, 255), (630, 350, 20, 20))
     else:
         tela.blit(imagem_fundo, (0, 0))
-    
 
+        botaoa = pygame.Rect(20, 20, 50, 30)
+        botaob = pygame.Rect(80, 20, 50, 30)
+        
+        pos = pygame.mouse.get_pos()
+        btnstatea = False
+        btnstateb = False
+
+        if botaoa.collidepoint(pos):
+            pygame.draw.rect(tela, (200, 140, 160), botaoa)
+            if pygame.mouse.get_pressed()[0] == 1 and btnstatea == False:
+                btnstatea = True
+                pygame.draw.rect(tela, (100, 200, 120), botaoa)
+                portaa = 1
+
+        elif botaob.collidepoint(pos):
+            pygame.draw.rect(tela, (200, 140, 160), botaob)
+            if pygame.mouse.get_pressed()[0] == 1 and btnstateb == False:
+                btnstateb = True
+                pygame.draw.rect(tela, (100, 200, 120), botaob)
+                portab = 1
+            
+        else:
+            pygame.draw.rect(tela, (200, 100, 80), botaoa)
+            pygame.draw.rect(tela, (200, 100, 80), botaob)
+            portab = 0
+            portaa = 0
+    
+    mouse_pos = pygame.mouse.get_pos()
+    aba_monitor = pygame.Rect(0, 680, 1280, 40)
+    if aba_monitor.collidepoint(mouse_pos) and hover == False:
+        hover = True
+        office = not office # Se era True (Escritório), vira False (Câmeras) e vice-versa
+    else:
+        hover = False
+
+    pygame.draw.rect(tela, (100, 100, 100), aba_monitor)
     tempo = pygame.time.get_ticks()
-    portaa.doorcontrol()
-    portab.doorcontrol()
-    morcego.update(tempo, portaa.state, portab.state)
+    morcego.update(tempo, portaa, portab)
+    dino.update(tempo, portaa, portab)
 
     
 
